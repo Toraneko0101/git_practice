@@ -2,6 +2,7 @@
 
 - Gitの練習用に作成しました
 
-```text
-    vimで記述しています
+```python
+    for i in range(10):
+        print(i)
 ```
