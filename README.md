@@ -14,3 +14,12 @@ test_list.forEach((value)=>{
     console.log(value);
 })
 ```
+
+```ruby
+
+num = 0
+while num < 5 do
+    puts "Number is: " + num.to_s
+    num = num + 1
+end
+```
