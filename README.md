@@ -15,6 +15,7 @@ test_list.forEach((value)=>{
 })
 ```
 
+
 ```ruby
 
 num = 0
@@ -22,4 +23,17 @@ while num < 5 do
     puts "Number is: " + num.to_s
     num = num + 1
 end
+```
+
+```php
+
+<?php
+ 
+$a="Hello";
+$b="world";
+ 
+echo "$a, $b";
+ 
+?>
+>>>>>>> issue3
 ```
