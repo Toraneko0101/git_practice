@@ -14,3 +14,15 @@ test_list.forEach((value)=>{
     console.log(value);
 })
 ```
+
+```php
+
+<?php
+ 
+$a="Hello";
+$b="world";
+ 
+echo "$a, $b";
+ 
+?>
+```
