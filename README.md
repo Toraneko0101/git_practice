@@ -1,38 +1,16 @@
 # git_practice
 
-- Gitの練習用に作成しました
+## branch
 
-```python
-    for i in range(10):
-        print(i)
-```
+```console
 
-```javascript
+# リモートブランチの追跡リスト
+git branch -r
 
-let test_list = ["neko", "inu", "nezumi"];
-test_list.forEach((value)=>{
-    console.log(value);
-})
-```
+# 追跡開始
+git branch origin <branch>
 
+# 不要になったリモートブランチを追跡削除
+git branch --prune
 
-```ruby
-
-num = 0
-while num < 5 do
-    puts "Number is: " + num.to_s
-    num = num + 1
-end
-```
-
-```php
-
-<?php
- 
-$a="Hello";
-$b="world";
- 
-echo "$a, $b";
- 
-?>
 ```
