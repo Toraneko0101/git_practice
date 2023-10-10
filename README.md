@@ -61,13 +61,23 @@ git branch <local_branch> -u <remote_branch>
 # リモートブランチの追跡リスト
 git branch -r
 
-# 追跡開始
+# リモートブランチの追跡開始
 git branch origin <branch>
 
 # 不要になったリモートブランチを追跡しない
 git fetch --prune
 
 
+```
+
+## merge
+
+```console
+
+# ブランチのマージ時に、変更内容を知りたい場合、--no-ff(No-FastForward)オプションを付ける
+    # github上のpull-requestは--no-ffでmergeされる
+    # https://docs.github.com/ja/github-ae@latest/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github
+git merge --no-ff
 ```
 
 
