@@ -14,7 +14,7 @@ git commit -m "test_commit"
 git commit -a -m "test_commit"
 ```
 
-# Push
+## Push
 ```console
 
 # origin -> git remote add origin <repository_URL>
@@ -34,14 +34,24 @@ git push origin <local_branch>:<remote_branch>
 # ブランチの切り替え
 git checkout <branch>
 
+# ローカルブランチ一覧の表示
+git branch
+
+# リモートブランチ一覧の表示
+git branch -r
+
+# ローカルブランチの削除
+git branch -D <branch>
+
+
 # リモートブランチの追跡リスト
 git branch -r
 
 # 追跡開始
 git branch origin <branch>
 
-# 不要になったリモートブランチを追跡削除
-git branch --prune
+# 不要になったリモートブランチを追跡しない
+git fetch --prune
 
 ```
 
