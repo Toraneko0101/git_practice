@@ -84,4 +84,53 @@ git fetch --prune
 git merge --no-ff
 ```
 
+## github cli
+
+
+[マニュアル](https://cli.github.com/manual/)
+
+```
+
+# install
+winget install --id GitHub.cli
+
+# upgrade
+winget upgrade --id GitHub.cli
+
+# login
+gh auth login
+
+# logout
+gh auth logout
+
+# repositoryの概要(README.md)
+gh repo view <repository_url>
+
+# 新しいrepositoryを対話的に作成
+gh repo create
+
+# repositoryをclone
+gh repo clone <repository_url>
+
+# issueの確認
+gh issue list
+
+# issueを閲覧
+gh issue view 4
+
+# issueの作成
+gh issue create --title "I use github-cli" --body "Nothing"
+
+# issueにコメントを追加(4 -> #4)
+gh issue comment 4 --body "I add comment"
+
+# issueを再度開く/削除する
+gh issue reopen/delete 4
+
+# issueを閉じる
+gh issue close 4 --comment "task-complete Toraneko" --reason "complete"
+
+# pull-requestの確認
+gh pr list
+```
 
