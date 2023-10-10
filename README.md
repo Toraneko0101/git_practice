@@ -29,6 +29,7 @@ git push origin <local_branch>
 git push origin <local_branch>:<remote_branch>
 
 # リモートブランチを削除(push元がないので)
+    # Openなpullrequestに関連付けられているbranchは削除できない
 git push origin :<remote_branch>
 
 ```
