@@ -34,7 +34,7 @@ git push origin :<remote_branch>
 
 ```
 
-## branch
+## Branch
 
 ```console
 
@@ -71,7 +71,7 @@ git fetch --prune
 
 ```
 
-## merge
+## Merge
 
 ```console
 
