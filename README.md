@@ -29,7 +29,7 @@ git push origin <local_branch>
 git push origin <local_branch>:<remote_branch>
 
 # リモートブランチを削除(push元がないので)
-    # Openなpullrequestに関連付けられているbranchは削除できない
+# Openなpullrequestに関連付けられているbranchは削除できない
 git push origin :<remote_branch>
 
 ```
@@ -76,8 +76,8 @@ git fetch --prune
 ```console
 
 # ブランチのマージ時に、変更内容を知りたい場合、--no-ff(No-FastForward)オプションを付ける
-    # github上のpull-requestは--no-ffでmergeされる
-    # https://docs.github.com/ja/github-ae@latest/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github
+# github上のpull-requestは--no-ffでmergeされる
+# https://docs.github.com/ja/github-ae@latest/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github
 git merge --no-ff
 ```
 
