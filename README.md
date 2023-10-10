@@ -4,6 +4,9 @@
 
 ```console
 
+# ブランチの切り替え
+git checkout <branch>
+
 # リモートブランチの追跡リスト
 git branch -r
 
