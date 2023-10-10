@@ -9,6 +9,9 @@ git clone <repository_url>
 # stage
 git add <file_name>
 
+# stage all
+git add .
+
 # commit
 git commit -m "test_commit"
 
