@@ -134,3 +134,65 @@ gh issue close 4 --comment "task-complete Toraneko" --reason "complete"
 gh pr list
 ```
 
+## Github-pages
+```
+settings/Pagesでbranchを選んで作成可能
+```
+
+## Github-release
+```
+・code/releaseから作成可能。
+・branchを選んで、generate release notesを選ぶことで、
+　pull-requestsの流れや、反映者などを設定できる
+・pre-relaseを選ぶことで、表示しない風にもできる
+```
+## Github-issue auto close
+```
+Mergeする際のコメントにfix #6などと記載する
+```
+
+## Github-Codespaces
+```
+・緑色のcodeのボタンからCodespacesを選択する
+・立ち上げる際に初期設定が必要な場合は、settingsからdotfileの設定を有効化する
+・設定はsetup.sh等に記載する。
+・環境設定について記載したいときは、.devcontainer/devcontainer.jsonに記載(以下では2つの拡張機能を追加している)
+```
+
+```sh
+# setup.shの記載例
+#!/bin/bash
+
+sudo apt-get update
+sudo apt-get install sl
+sudo apt install -y fortune
+```
+
+```json
+//.devcontainer/devcontainer.jsonの記載例
+{
+  // Name this configuration
+  "name": "Codespace for Skills!",
+  // Use the base codespace image
+  "image": "mcr.microsoft.com/vscode/devcontainers/universal:latest",
+
+  "remoteUser": "codespace",
+  "overrideCommand": false ,
+  
+ // Add the IDs of extensions you want installed when the container is created.
+ "customizations": {
+     "vscode": {
+         "extensions": [
+             "ms-dotnettools.csharp",
+             "ms-python.python"
+         ]
+     },
+     "codespaces": {
+         "openFiles": [
+             "codespace.md"
+         ]
+     }
+ } ,
+ "postCreateCommand": "echo '# Writing code upon codespace creation!'  >> codespace.md"
+}
+```
