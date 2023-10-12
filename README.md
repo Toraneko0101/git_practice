@@ -251,6 +251,7 @@ jobs:
     #該当jobで実行されるすべてのstepをグループ化
     steps:
       #actions/checkoutアクションのv4を実行=リポジトリをランナーにcheckoutし、他のアクションを実行できるようにする
+      #構文は{owner}/{repository}@{ref:ブランチ名}
       - uses: actions/checkout@v4
       #指定したバージョン(今回は14)のnode.jsをインストール -> node,npmコマンドをpathにおく
       - uses: actions/setup-node@v3
