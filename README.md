@@ -339,7 +339,19 @@ Dockerコンテナ: Dockerイメージのランタイムインスタンス
 
 ```
 
+### GHCR
+```control
+GHCR(Github Container Registry)
+    公開レジストリ。
+    ここにDockerイメージをPushして、誰でもイメージをダウンロードできるようにする
 
+    利用時
+        1. Personal Access Tokenを作成する
+            ※参考URL https://docs.github.com/ja/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
+            ※ Tokenのセキュリティはしっかりすること
+        2. docker loginコマンドで、ghcr.ioに対してログインする
+            docker login ghcr.io -u USERNAME
+```
 
 ### コード例(Imageの取得->ログイン->Pushまで)
 ```yml
@@ -399,18 +411,7 @@ jobs:
 
 ### PushしたイメージをPull -> 実行
 
-```
-GHCR(Github Container Registry)
-    公開レジストリ。
-    ここにDockerイメージをPushして、誰でもイメージをダウンロードできるようにする
-
-    利用時
-        1. Personal Access Tokenを作成する
-            ※参考URL https://docs.github.com/ja/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
-            ※ Tokenのセキュリティはしっかりすること
-        2. docker loginコマンドで、ghcr.ioに対してログインする
-            docker login ghcr.io -u USERNAME
-    
+``` 
     imageのPull
         3. docker pull ghcr.io/USERNAME/publish-packages/game:TAG
     imageの実行
