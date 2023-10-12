@@ -260,9 +260,60 @@ jobs:
         with:
           node-version: '14'
       #run -> ランナー上でコマンドを実行。今回は、npmを用い、batのソフトウェアテストパッケージをインストール
+      #スクリプトをリポジトリ内に保存している場合は、pathを書くことで実行可能(シェルタイプの記述が必要 -> shell: bash)
       - run: npm install -g bats
       #ソフトウェアのバージョンを出力
       - run: bats -v
 ```
 ![actionの図](images/actions1.png)
 
+### ファイルのUpload,Download
+```yml
+name: artifacts upload workflow
+
+#mainブランチにpushした場合
+on:
+  push:
+    branches: [ "main" ]
+
+
+
+jobs:
+  upload:
+    #サーバ
+    runs-on: ubuntu-latest
+    steps:
+    #必要
+    - uses: actions/checkout@v2
+
+    - run: mkdir -p path/to/artifact
+
+    # my-artifactというキーワードでpathに該当するファイルをupload
+    - run: echo hello > path/to/artifact/world.txt
+    - uses: actions/upload-artifact@v3
+      with:
+        name: my-artifact
+        path: path/to/artifact/world.txt
+
+    # extra-artifactというキーワードでpathに該当するファイルをupload
+    - run: echo hi > path/to/artifact/extra.txt
+    - uses: actions/upload-artifact@v3
+      with:
+        name: extra-artifact
+        path: path/to/artifact/extra.txt
+
+    # extra-artifactというキーワードでpathの階層へファイルをdownload
+    - uses: actions/download-artifact@v3
+      id: test
+      with:
+        name: extra-artifact
+        path: path/to/artifacts
+
+    #downloadパスを表示
+    - name: 'Echo download path'
+      run: echo ${{steps.test.outputs.download-path}}
+
+    #ファイルの中身を表示
+    - name: 'Cat world.txt'
+      run: cat ${{steps.test.outputs.download-path}}/extra.txt
+```
