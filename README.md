@@ -339,6 +339,7 @@ Dockerコンテナ: Dockerイメージのランタイムインスタンス
 
 ```
 
+
 ### GHCR
 ```control
 GHCR(Github Container Registry)
@@ -353,6 +354,13 @@ GHCR(Github Container Registry)
             docker login ghcr.io -u USERNAME
 ```
 
+### Dockerfile
+```control
+# Dockerベースイメージを選択
+FROM nginx:1.24-alpine
+# CurrentディレクトリのファイルをDockerイメージの該当階層にCOPY
+COPY . /usr/share/nginx/html
+```
 ### コード例(Imageの取得->ログイン->Pushまで)
 ```yml
 # 1.指定されたDockerイメージのメタデータを取得
