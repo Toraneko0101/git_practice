@@ -382,7 +382,7 @@ jobs:
         # images:対象のイメージ。
         # tags:取得したメタデータの形式(今回はshaハッシュ値->イメージの特定のビルドを識別している)
         with:
-          images: ghcr.io/USERNAME/publish-packages/game
+          images: ghcr.io/USERNAME/REPO/IMAGE_NAME
           tags: type=sha
     
       # Github Container Registryにログインする
