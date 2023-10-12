@@ -339,7 +339,9 @@ Dockerコンテナ: Dockerイメージのランタイムインスタンス
 
 ```
 
-### コード例
+
+
+### コード例(Imageの取得->ログイン->Pushまで)
 ```yml
 # 1.指定されたDockerイメージのメタデータを取得
 # 2.GHCRにログインし、ビルドされたコンテナイメージをpush
@@ -363,11 +365,12 @@ jobs:
       # Dockerコンテナのメタデータを取得
       - name: Docker meta
         id: meta
+        # 取得するためのアクション
         uses: docker/metadata-action@v4
         # images:対象のイメージ。
         # tags:取得したメタデータの形式(今回はshaハッシュ値->イメージの特定のビルドを識別している)
         with:
-          images: ghcr.io/YOURNAME/publish-packages/game
+          images: ghcr.io/USERNAME/publish-packages/game
           tags: type=sha
     
       # Github Container Registryにログインする
@@ -392,4 +395,26 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
 
+```
+
+### イメージのPull -> 実行
+
+```
+GHCR(Github Container Registry)
+    公開レジストリ。
+    ここにDockerイメージをPushして、誰でもイメージをダウンロードできるようにする
+
+    利用時
+        1. Personal Access Tokenを作成する
+            ※参考URL https://docs.github.com/ja/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
+            ※ Tokenのセキュリティはしっかりすること
+        2. docker loginコマンドで、ghcr.ioに対してログインする
+            docker login ghcr.io -u USERNAME
+    
+    imageのPull
+        3. docker pull ghcr.io/USERNAME/publish-packages/game:TAG
+    imageの実行
+        4. docker ls
+        5. docker run -dp 8080:80 --rm <YOUR_IMAGE_NAME:TAG>
+        6. localhost:8080で確認
 ```
