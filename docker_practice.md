@@ -80,3 +80,15 @@
     ・Dockerクライアントとデーモンの間の通信にはREST APIが用いられる
 
 ```
+
+## Getting Started
+```
+docker run -dp 80:80 docker/getting-started
+
+    -d : コンテナをバックグラウンドで実行
+    -p 80:80 : ホストの80番ポートをコンテナの80番ポートに割り当てる
+    docker/getting-started : 使用するdockerイメージ
+
+-> 実行すると、Docker DesktopのDashBoardに情報が追加された
+-> Desktop上から使用ポートを確認したり、停止が可能
+```
