@@ -196,3 +196,70 @@ sudo apt install -y fortune
  "postCreateCommand": "echo '# Writing code upon codespace creation!'  >> codespace.md"
 }
 ```
+
+## Github-Actions
+
+### 概要
+```
+継続的インテグレーションと、継続的デリバリー(CI/CD)を実現する
+    継続的インテグレーション：ビルド、テスト、デプロイの流れを自動化する
+    継続的デリバリー：コードに変更が生じるたびに、実稼働環境でのリリース準備を自動で行う
+```
+
+## 補足
+```
+・何かしらのイベントをトリガーに、ワークフローを実行する
+・ワークフローを実行するための仮想マシンは自分で用意することもできる
+・複数のStepでJobが構成され、複数のJobでワークフローが構成される。
+・Jobは順次、並列のいずれかで実行される
+・ワークフローはYAMLファイルに記述する。格納位置は、.githab/workflows
+・別ワークフローを参照することもできる
+・複雑で繰り返されるタスクはアクションを用い、ランナーでジョブを実行する
+```
+
+## イベントについて
+```
+通常は、何か(たとえばissueを開いたとき)にトリガーされるが、
+スケジュールに従って、自動でトリガーさせることもできる
+```
+
+## Sample
+```yml
+#Actionsタブに表示されるワークフローの名前。省略された場合ファイル名を表示
+name: learn-github-actions 
+#Actionsの実行履歴などに表示。github.actor=username
+run-name: ${{ github.actor }} is learning GitHub Actions
+#イベントを定義。複数の場合 on: [push, pull]
+#下の例は、labelを作成したときと、main or feature/**ブランチ(ただし末尾にignoreとつくものは除く)にpushした時にトリガーする
+#on:
+#  labels:
+#    types:
+#      - created
+#  push:
+#    branches:
+#      - main
+#      - 'feature/**'
+#      - '!feature/**ignore'
+      
+on: [push]
+# workflowで実行されるすべてのJobをグループ化する
+jobs:
+  #jobの名前
+  check-bats-version:
+    #実行されるサーバ
+    runs-on: ubuntu-latest
+    #該当jobで実行されるすべてのstepをグループ化
+    steps:
+      #actions/checkoutアクションのv4を実行=リポジトリをランナーにcheckoutし、他のアクションを実行できるようにする
+      - uses: actions/checkout@v4
+      #指定したバージョン(今回は14)のnode.jsをインストール -> node,npmコマンドをpathにおく
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+      #run -> ランナー上でコマンドを実行。今回は、npmを用い、batのソフトウェアテストパッケージをインストール
+      - run: npm install -g bats
+      #ソフトウェアのバージョンを出力
+      - run: bats -v
+```
+![actionの図](images/actions1.png)
+
