@@ -84,6 +84,13 @@ git fetch --prune
 git merge --no-ff
 ```
 
+## ブランチの保護
+```console
+・settings -> branches -> add ruleで追加
+・ブランチ名を入れ、有効にすると、該当ブランチには直接Push出来なくなる
+・Require a pull request before merging => Mergeする前にpull-requestが必要
+・Require status checks to pass before merging　=> Mergeの前にStatus Checkを通過する必要がある
+```
 ## github cli
 
 
