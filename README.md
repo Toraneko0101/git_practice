@@ -397,7 +397,7 @@ jobs:
 
 ```
 
-### イメージのPull -> 実行
+### PushしたイメージをPull -> 実行
 
 ```
 GHCR(Github Container Registry)
