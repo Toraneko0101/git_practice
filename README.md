@@ -331,10 +331,65 @@ jobs:
       run: cat ${{steps.test.outputs.download-path}}/extra.txt
 ```
 
-### プロジェクトをDockerイメージに公開する
+## プロジェクトをDockerイメージに公開する
 ```console
 Dockerfile: Dockerイメージの構築に必要なコマンドと手順を含む、テキストドキュメント
 Dockerイメージ: 実行可能パッケージ
 Dockerコンテナ: Dockerイメージのランタイムインスタンス
+
+```
+
+### コード例
+```yml
+# 1.指定されたDockerイメージのメタデータを取得
+# 2.GHCRにログインし、ビルドされたコンテナイメージをpush
+# 補足：ビルドされたコンテナイメージには、取得されたshaハッシュ値のタグがつけられる
+name: Publish to Docker
+on:
+  push:
+    branches:
+      - main
+# アクセス許可
+permissions:
+  #Github Packagesでのパッケージのアップロードと公開を許可
+  packages: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Dockerコンテナのメタデータを取得
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        # images:対象のイメージ。
+        # tags:取得したメタデータの形式(今回はshaハッシュ値->イメージの特定のビルドを識別している)
+        with:
+          images: ghcr.io/YOURNAME/publish-packages/game
+          tags: type=sha
+    
+      # Github Container Registryにログインする
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        # registry:GHCRのレジストリURL
+        # username: ActionをTriggerしたリポジトリの所有者
+        # password アクセストークンを用いてGHCRにログイン
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+    
+      #Dockerコンテナのビルドと実行
+      - name: Build container
+        uses: docker/build-push-action@v4
+        #context: Dockerイメージをビルドするためのコンテキスト（今回はカレント）
+        #push:true ビルドしたDockerイメージをリポジトリにPushする
+        #tags: Docker metaステップの出力を利用し、ビルドしたイメージにタグをつける
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
 
 ```
