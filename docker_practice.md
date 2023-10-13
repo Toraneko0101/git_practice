@@ -52,6 +52,7 @@
         docker run -it ubuntu /bin/bash
 
     上記の説明
+        0. docker run = docker pull + docker create + docker startのようなもの
         1. docker run ubuntu
             ubuntuイメージがlocalになければ設定察れているレジストリからイメージ取得=docker pull ubuntu
         2. Dockerは新しいコンテナを取得=docker create
@@ -80,6 +81,14 @@
     ・Dockerクライアントとデーモンの間の通信にはREST APIが用いられる
 
 ```
+## Docker Desktopのインストールに際して
+```
+- WSL2が有効化されている
+- 何らかのLinuxディストリビューションがsetupされている
+
+windows11なら以下のコマンドを打ち込むだけでいい
+    wsl --install
+```
 
 ## Getting Started
 ```
@@ -91,4 +100,38 @@ docker run -dp 80:80 docker/getting-started
 
 -> 実行すると、Docker DesktopのDashBoardに情報が追加された
 -> Desktop上から使用ポートを確認したり、停止が可能
+```
+
+## 用語補足
+```
+sandbox: 
+    通常利用する領域から隔離され、保護された空間に構築された仮想環境
+
+隔離をなぜ実現できるのか
+    カーネルのnamespaceとcgroupの活用
+    コンテナ: 単一のホスト上で実行されるプロセスの分離されたグループ
+
+    cgroup:
+        ・プロセスをグループ化し、リソース制御を行う
+        ・CPU,メモリ,ディスクI/O,ネットワーク帯域幅などのリソースを制御し、各プロセスグループに割り当てる
+        ・Dockerコンテナはcgroupsを使用して、各コンテナのリソース制御を管理する。これによりコンテナ間でのリソース競合を防ぐ
+    Namespaces:
+        ・プロセスやリソースの隔離を実現するためのLinuxカーネル機能
+        ・異なるコンテナ間でプロセスやファイルシステム、ネットワークなどの名前空間を分離
+        ・Dockerコンテナは異なる名前空間で実行されるので、各コンテナは独自のプロセスID,ファイルシステム、ホスト名などを持つ。よって互いの影響を受けずに実行可能
+        ・例) PID Namespaces->プロセスIDを隔離する
+
+    cgroups + Namespaces:
+        Dockerは名前空間でプロセスグループを隔離し、cgroupsでプロセスグループ(コンテナ)にリソースを制御、割り当てている。
+        それによってリソースの競合はおきず、独自の環境が保たれる
+
+    
+
+Docker利点まとめ
+    local,仮想マシン上で実行可能
+    クラウドにもデプロイ可能
+    多くのOSで実行可能
+    imageには、依存関係、設定ファイル、スクリプト、バイナリ、環境変数、メタデータ等が含まれる
+
+
 ```
