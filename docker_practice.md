@@ -397,7 +397,7 @@ Next
     1. 以下のコマンドを実行
         $ docker run -dp 127.0.0.1:3000:3000 -w /app --mount type=bind,src="$(pwd)",target=/app node:18-alpine sh -c "yarn install & yarn run dev"
     説明:
-        -w /app : コンテナ上の?作業ディレクトリを指定
+        -w /app : コンテナ上の作業ディレクトリを指定
         --mount type=bind,src="$(pwd)",target=/app: ホスト上のcurrentを、コンテナ内の/appディレクトリにバインドマウント
         node:18-alpine: 使用image
         sh -c "string": コマンドをstringで読み込みshで実行
@@ -469,7 +469,7 @@ MySQLの起動
         $ docker run -d \
             --network todo-app --network-alias mysql \
             -v todo-mysql-data:/val/lib/mysql \
-            -e MYSQL_ROOT_PASSWORD=secret \
+            -e MYSQL_ROOT_PASSWORD=<PASSWORD> \
             -e MYSQL_DATABASE=todos \
             mysql:8.0
 
@@ -478,8 +478,9 @@ MySQLの起動
                 ※networkの一覧はdocker network lsで
             --network-alias <aliad>　別名で名前解決
             -v ボリュームの設定
-            -v -v todo-mysql-data:/val/lib/mysql: ホストのtodo-mysql-dataボリュームを、/var/lib/mysqlにマウント
+            -v -v todo-mysql-data:/val/lib/mysql: ホストのtodo-mysql-dataボリュームを、/var/lib/mysqlにバインドマウント
                 ※docker volume createをしていないが、名前付きボリュームを使う場合、Dockerが自動的にボリュームを作成してくれる
+                ※ --mount type=bindとの相違点は、--mountが自動的にボリュームを作成しないところ。一般的には後者の方が安全面でよさそう
             -e 環境変数の設定
             mysql:8.0 mysqlのversion
 
@@ -551,7 +552,7 @@ MySQLとアプリを動かす
             --network todo-app \
             -e MYSQL_HOST=mysql \
             -e MYSQL_USER=root \
-            -e MYSQL_PASSWORD=secret \
+            -e MYSQL_PASSWORD=<PASSWORD> \
             -e MYSQL_DB=todos \
             node:18-alpine \
             sh -c "yarn install && yarn run dev"
@@ -656,6 +657,14 @@ MySQLとアプリを動かす
             ・todosデータベースの中にtodo_itemsというテーブルができていた
             ・作った覚えがないのだが、デフォルトなのだろうか？
 ```
+
+## 環境変数を用いた開発設定が推奨されない理由
+```
+    ・環境変数は子プロセスに渡されるので、意図しないアクセスが可能となる
+    ・誤って公開される可能性が高くなる
+```
+
+
 
 # 便利コマンド
 ```
