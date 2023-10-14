@@ -656,6 +656,10 @@ MySQLとアプリを動かす
         問題点：
             ・todosデータベースの中にtodo_itemsというテーブルができていた
             ・作った覚えがないのだが、デフォルトなのだろうか？
+    
+Next
+    ・Docker Composeを使って、より簡単な方法でアプリを立ち上げる
+    ・ネットワークの構成,コンテナ起動,環境変数指定,ポート公開などを簡単に済ませる
 ```
 
 ## 環境変数を用いた開発設定が推奨されない理由
@@ -664,6 +668,95 @@ MySQLとアプリを動かす
     ・誤って公開される可能性が高くなる
 ```
 
+## Docker Composeを使う
+```
+Docker Compose
+    ・複数コンテナのアプリケーションを定義、共有するために開発されたツール
+    ・サービスを定義するYAMLファイルを作成->コマンド実行で立ち上げ、削除可能
+
+Composeの利点
+    ・アプリケーションスタックをファイルに定義し、リポジトリの一番上における
+    ・つまり、リポジトリのClone->起動->貢献の流れが容易になる
+
+Composeのinstall
+    ・Docker Desktooをinstall済みなら既に入っている
+    ・version確認
+        $ docker compose version
+
+```
+
+Composeファイルの作成
+```
+1. getting-started/appでdocker-compose.ymlを作成
+```
+
+```
+2. サービスを定義
+```
+```yml
+#実行したいサービス(コンテナ)の一覧を定義する
+#名前は自動的にネットワークエイリアス(--network-alias)となる
+
+services:
+  app:
+    image: node:18-alpine
+    command: sh -c "yarn install && yarn run dev"
+    ports:
+      - 127.0.0.1:3000:3000
+    working_dir: /app
+    # source:target:mode
+    # 長い形式ならtype等も指定可能
+    volumes:
+      - ./:/app
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret
+      MYSQL_DB: todos
+  
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - todo-mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: todos
+
+#Composeは自動的に名前付きボリュームを作成しないので
+#volumesセクションでボリュームを定義する
+#ボリューム名のみを指定するとデフォルトのオプションが使われる
+volumes:
+  todo-mysql-data:
+```
+```
+3. アプリケーションスタックを起動
+    $ docker compose up -d
+
+    Creating network "app_default" with the default driver
+    Creating volume "app_todo-mysql-data" with default driver
+    Creating app_app_1   ... done
+    Creating app_mysql_1 ... done
+
+4. docker compose logs -fでサービスのログを相互に閲覧
+    ※fオプションで追跡し続ける
+    ※特定のサービスのみ追跡したい場合は-fの後ろで指定
+    app-mysql-1  | 2023-10-14 10:01:06+00:00 [Note] [Entrypoint]: MySQL init process done. Ready for start up.
+    app-app-1    | Listening on port 3000
+
+5. docker-desktopのダッシュボードでスタックを確認
+
+6. docker-compose-upで削除する
+
+Next:
+    イメージ構築のベストプラクティスを学ぶ
+
+
+```
+
+## イメージ構築のベストプラクティス
+```
+
+```
 
 
 # 便利コマンド
