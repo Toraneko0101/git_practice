@@ -154,6 +154,8 @@ Docker利点まとめ
 
 2. Dockerfileに以下のように記述
 
+#Docker構文の場所を定義している
+#最新の 1.x.x マイナー および パッチ・リリースが更新され続ける(docker/dockerfile:1.2の場合、1.3.xがリリースされると更新停止となる)
 # syntax=docker/dockerfile:1
 # ベースとなるDockerイメージを指定
 FROM node:18-alpine
@@ -338,9 +340,16 @@ todoデータを保持するためには？
 
 ボリュームの作成とコンテナの起動
     1. docker volume create <volume_name> でボリュームを作成
+
     2. todoアプリのコンテナを作り直す(現在は保存するボリュームを使わずに起動しているので)
+
     3. todoアプリのコンテナを起動する際に、ボリュームのマウントを指定する--mountオプションを追加する
     $ docker run -dp 127.0.0.1:3000:3000 --mount type=volume,src=todo-db,target=/etc/todos getting-started
+        # --mount : マウントを行う
+        # type: マウントのタイプ。今回はvolume
+        # src: マウント元(ボリューム名のみの指定でOK)
+        # target: マウント先
+
     4. 実際にコンテナを削除、起動し保存されていることを確認する
     -> OK
 
@@ -366,8 +375,287 @@ Next
     これを改善する
 ```
 
-##　バインドマウントを使う
+## バインドマウントを使う
+```
+バインドマウント
+    ・ホスト上のファイルシステムをコンテナ内と直接共有する
+    ・バインドマウントを用いてソースコードをコンテナ内にマウントした場合、動作中でもアプリの変更が直ちに反映される
+    ・ホスト上の場所は自分で決められる
+    ・変更するたびにイメージの再構築をする必要はない
 
+バインドマウントを試す
+    1. ubuntuコンテナでbashを実行
+    $ docker run -it --mount type=bind,src="$(pwd)",target=/src ubuntu bash
+    2. pwd=getting-started/appなので、ホストのgetting-started/appとDockerの/srcが結びつく
+    3. そのため、/srcの中にmyfile.txtをtouchすると、ホストのgetting-started/app配下に、myfile.txtが生成される。逆もしかり。
+    -> ホストとコンテナ間で、ファイルを共有していることが確認できた。肝はtype=bind
+
+コンテナのデプロイ
+    ・バインドマウントの利点は、開発マシン上に全ての構築ツールをインストールする必要がないこと
+    ・docker runを実行するだけで依存関係とツールを取得可能
+
+    1. 以下のコマンドを実行
+        $ docker run -dp 127.0.0.1:3000:3000 -w /app --mount type=bind,src="$(pwd)",target=/app node:18-alpine sh -c "yarn install & yarn run dev"
+    説明:
+        -w /app : コンテナ上の?作業ディレクトリを指定
+        --mount type=bind,src="$(pwd)",target=/app: ホスト上のcurrentを、コンテナ内の/appディレクトリにバインドマウント
+        node:18-alpine: 使用image
+        sh -c "string": コマンドをstringで読み込みshで実行
+        yarn install && yarn run dev: パッケージinstall -> 開発用サーバを開始
+    
+    補足:
+        package.jsonのscriptsには以下の記述がある
+        "dev": "nodemon src/index.js"
+        したがって、yarn run devで、devスクリプトはnodemonを起動する
+    
+    2. docker logs <container-id>でログを観察する
+        $ docker logs -f <container-id>
+        yarn install v1.22.19
+        [1/4] Resolving packages...
+        success Already up-to-date.
+        Done in 0.32s.
+        yarn run v1.22.19
+        $ nodemon src/index.js
+        [nodemon] 2.0.20
+        [nodemon] to restart at any time, enter `rs`
+        [nodemon] watching path(s): *.*
+        [nodemon] watching extensions: js,mjs,json
+        [nodemon] starting `node src/index.js`
+        Using sqlite database at /etc/todos/todo.db
+        Listening on port 3000
+```
+
+## ホストマシン上のアプリを更新し、コンテナに変更を反映する
+```
+1. sourceを更新
+2. リロードするだけで変更が反映された
+
+問題点:
+    DBを指定していないので、またデータが消えている
+
+Next:
+    他のRDB(MySQL)を使えるようにする
+    コンテナ間で通信を行わせる
+```
+![bind_mount](./images/bindmount.png)
+
+## 複数コンテナのアプリ
+```
+方針
+    1つのコンテナでは1つのことを実行する
+理由
+    ・バージョンを分離する
+    ・マイクロサービスの方がいい
+    ・複数のプロセスを実行する場合、コンテナは1つのプロセスのみを起動するので、プロセスマネージャが必要になり、コンテナの起動、停止が複雑になる
+
+コンテナのネットワーク機能
+    ・通常は各コンテナ間の情報を得られない
+    ・通信を可能にするため、ネットワーク機能を使う
+
+コンテナをネットワークに加えるには
+    ・コンテナの起動時にネットワークを割り当てる
+    ・既に実行しているコンテナをネットワークに接続する
+
+MySQLの起動
+    ・今回はネットワークの作成->起動時に接続の手順を踏む
+
+    1.　ネットワークを作成する
+        $ docker network create todo-app
+
+    2. MySQLコンテナを起動し、ネットワークに接続する
+        ・この時、環境変数も併せて定義する
+        ・環境変数を設定するのは、データベースの初期化のため
+
+        $ docker run -d \
+            --network todo-app --network-alias mysql \
+            -v todo-mysql-data:/val/lib/mysql \
+            -e MYSQL_ROOT_PASSWORD=secret \
+            -e MYSQL_DATABASE=todos \
+            mysql:8.0
+
+        補足:
+            --network todo-app: todo-appネットワークに接続
+                ※networkの一覧はdocker network lsで
+            --network-alias <aliad>　別名で名前解決
+            -v ボリュームの設定
+            -v -v todo-mysql-data:/val/lib/mysql: ホストのtodo-mysql-dataボリュームを、/var/lib/mysqlにマウント
+                ※docker volume createをしていないが、名前付きボリュームを使う場合、Dockerが自動的にボリュームを作成してくれる
+            -e 環境変数の設定
+            mysql:8.0 mysqlのversion
+
+    
+    3. データベースに接続し、接続されているか確認する
+        $ docker exec -it <CONTAINERID> mysql -u root -p
+
+        mysql> show databases;
+        +--------------------+
+        | Database           |
+        +--------------------+
+        | information_schema |
+        | mysql              |
+        | performance_schema |
+        | sys                |
+        | todos              |
+        +--------------------+  
+
+        mysql> exit 
+
+
+(MySQLへと接続)どのようにして他のコンテナはMySQLのコンテナを見つけるのか
+    ポイント: コンテナは自身のIPアドレスを持つ
+
+    1. nicolaka/netshootでdigコマンドを用い、DNS解決の一端を見る
+        $ docker run -it --network todo-app nicolaka/netshoot
+                                    dP            dP                      
+            dP
+                            88            88                      
+            88
+        88d888b. .d8888b. d8888P .d8888b. 88d888b. .d8888b. .d8888b. d8888P
+        88'  `88 88ooood8   88   Y8ooooo. 88'  `88 88'  `88 88'  `88   88
+        88    88 88.  ...   88         88 88    88 88.  .88 88.  .88   88
+        dP    dP `88888P'   dP   `88888P' dP    dP `88888P' `88888P'   dP
+                                                                
+
+        Welcome to Netshoot! (github.com/nicolaka/netshoot)       
+        Version: 0.11
+
+        $ dig mysql
+        ; <<>> DiG 9.18.13 <<>> mysql
+        ;; global options: +cmd
+        ;; Got answer:
+        ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 40736 
+        ;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+        ;; QUESTION SECTION:
+        ;mysql.                         IN      A
+
+        ;; ANSWER SECTION:
+        mysql.                  600     IN      A       <IP_ADDRESS>
+        ;; Query time: 10 msec
+        ;; SERVER: 127.0.0.11#53(127.0.0.11) (UDP)
+        ;; WHEN: Sat Oct 14 07:35:09 UTC 2023
+        ;; MSG SIZE  rcvd: 44
+
+    2.  上記より、mysqlと打つだけで、名前解決が行われることがわかる
+
+    補足：
+        ・これが可能なのは、--network-aliasフラグを用いているため
+        ・DockerはコンテナのIPアドレスをネットワークエイリアスで調べられる
+
+MySQLとアプリを動かす
+    ※環境変数を用いた接続設定は本番環境では推奨されない
+
+    1. コンテナをアプリのネットワークに接続する(pwdを使うので、getting-started/appに居ること！)
+        $ docker run -dp 127.0.0.1:3000:3000 \
+            -w /app -v "$(pwd):/app" \
+            --network todo-app \
+            -e MYSQL_HOST=mysql \
+            -e MYSQL_USER=root \
+            -e MYSQL_PASSWORD=secret \
+            -e MYSQL_DB=todos \
+            node:18-alpine \
+            sh -c "yarn install && yarn run dev"
+
+        補足:
+            MYSQL_HOST:MySQLサーバを実行中のホスト名
+            MYSQL_USER: 接続に使うユーザ名
+            MYSQL_PASSWORD: 接続に使うパスワード
+            MYSQL_DB: 接続先として使うデータベース
+
+    2. コンテナのlogにmysqlの使用を示すメッセージが現れたのを確認する
+        yarn install v1.22.19
+        [1/4] Resolving packages...
+        success Already up-to-date.
+        Done in 0.38s.
+        yarn run v1.22.19
+        $ nodemon src/index.js
+        [nodemon] 2.0.20
+        [nodemon] to restart at any time, enter `rs`
+        [nodemon] watching path(s): *.*
+        [nodemon] watching extensions: js,mjs,json
+        [nodemon] starting `node src/index.js`
+        Waiting for mysql:3306.
+        Connected!
+        Connected to mysql db at host mysql
+        Listening on port 3000
+    
+    3. todoリストにいくつかアイテムを追加する
+
+    4. mysqlデータベースで確認する
+        docker exec -it <MYSQL_CONTAINER_ID> mysql -p todos
+
+        Reading table information for completion of table and column names
+        You can turn off this feature to get a quicker startup with -A
+
+        Welcome to the MySQL monitor.  Commands end with ; or \g.
+        Your MySQL connection id is 11
+        Server version: 8.0.34 MySQL Community Server - GPL
+
+        Copyright (c) 2000, 2023, Oracle and/or its affiliates.
+
+        Oracle is a registered trademark of Oracle Corporation and/or its
+        affiliates. Other names may be trademarks of their respective
+        owners.
+
+        Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+        mysql>
+    
+    4. mysqlシェルで確認
+        mysql> select * from todo_items;
+        +--------------------------------------+------------------------+-----------+
+        | id                                   | name                   | completed |
+        +--------------------------------------+------------------------+-----------+
+        | b89b9c06-443d-4b3a-8558-c5a924f89c2b | ??????????5????        |         0 |
+        | 65b91af8-7328-4875-8aa8-328b33a42291 | docker?image?????????? |         0 |
+        | 58448611-f365-4f15-83ab-06866e181202 | ??????????????         |         0 |
+        | 20ba828a-c7df-403f-8175-e2e249a15c91 | only english           |         0 |
+        +--------------------------------------+------------------------+-----------+
+
+        問題点: 日本語が表示されない?
+            ・my.cnfやdocker-compose.ymlを修正した方がよさそう？
+        場当たり的な解決策:
+            SET character_set_results=utf8mb4
+
+        mysql> select * from todo_items;
+        +--------------------------------------+----------------------------------------------+-----------+
+        | id                                   | name                                         | completed |
+        +--------------------------------------+----------------------------------------------+-----------+
+        | b89b9c06-443d-4b3a-8558-c5a924f89c2b | 昼ご飯を買いに行く（5時まで）  |         0 |
+        | 65b91af8-7328-4875-8aa8-328b33a42291 | dockerのimageの制限について調べる |         0 |
+        | 58448611-f365-4f15-83ab-06866e181202 | とっととゲーム開発に移行する   |         0 |
+        | 20ba828a-c7df-403f-8175-e2e249a15c91 | only english                                 |         0 |
+        +--------------------------------------+----------------------------------------------+-----------+
+
+        問題点:
+            ・表示が汚い
+        場当たり的な解決策：
+            以下の通り　-> 横並びの方が見やすいので何とかしたい
+
+        mysql> select * from todo_items\G
+        *************************** 1. row ***************************
+            id: b89b9c06-443d-4b3a-8558-c5a924f89c2b
+            name: 昼ご飯を買いに行く（5時まで）
+        completed: 0
+        *************************** 2. row ***************************
+            id: 65b91af8-7328-4875-8aa8-328b33a42291
+            name: dockerのimageの制限について調べる
+        completed: 0
+        *************************** 3. row ***************************
+            id: 58448611-f365-4f15-83ab-06866e181202
+            name: とっととゲーム開発に移行する
+        completed: 0
+        *************************** 4. row ***************************
+            id: 20ba828a-c7df-403f-8175-e2e249a15c91
+            name: only english
+        completed: 0
+    
+    5. 保管されているのが確認できればOK
+
+        問題点：
+            ・todosデータベースの中にtodo_itemsというテーブルができていた
+            ・作った覚えがないのだが、デフォルトなのだろうか？
+```
 
 # 便利コマンド
 ```
