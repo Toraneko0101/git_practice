@@ -755,9 +755,80 @@ Next:
 
 ## イメージ構築のベストプラクティス
 ```
+docker image history <image>
+    イメージ内の各レイヤが作成時に使われたコマンドを表示可能
+    最新のレイヤが一番上にある
 
+
+依存関係のキャッシュをサポートさせる(Dockerfileで)
+    理由：
+        imageを変更するたびにyarnの依存関係がインストールされるのは非効率なので
+    手段：
+        1. Nodeを用いたアプリの依存関係がpackage.jsonで定義されていることを思い出す
+        2. package.jsonをcopyし、依存関係をインストール。
+        3. そののちに、他の必要なすべてをコピーする
+        4. これにより、package.jsonを変更したときだけ、yarnの依存関係が再作成されるようになる
+
+        # syntax=docker/dockerfile:1
+        FROM node:18-alpine
+        WORKDIR /app
+        COPY package.json yarn.lock ./
+        RUN yarn install --production
+        COPY . .
+        CMD ["node", "src/index.js"]
+
+        5. .dockerignoreを作成し、node_modulesと記載
+        6. これによりnode_modulesはRUNステップ中の命令で作成されるファイルの影響を受けなくなる
+        7. docker build -t getting-started . でbuild
+        8. staticファイルを修正
+        9. 再度、docker build -t getting-started .
+        10. cacheが使われ、早くなったことが確認できる(1.7sくらいになった)
+    
 ```
 
+## マルチステージビルド
+```
+利点
+    ・構築時の依存関係と、実行時の依存関係を分離できる
+    ・必要なものだけコンテナに送るので、imageの容量を削減可能
+
+Javaの例
+    ・構築時はJDK,Gradleなどが必要
+    ・最終的なイメージには（コンパイル後は）要らない
+    ・そのため以下のようにする
+
+    #syntax=docker/dockerfile:1
+    FROM maven AS build
+    WORKDIR /app
+    COPY . .
+    RUN mvn package
+
+    FROM tomcat
+    COPY --from=build /app/target/file.war /usr/local/tomcat/webapps
+
+    ・上では、buildでJavaの構築をMavenで行っている
+    ・その後、FROM tomcat以後で、buildステージからファイルをコピーし、最終的なイメージには最後のステージに作成されたものだけを利用する。
+
+Reactの例
+    開発環境でNodeを用い、
+    本番環境ではnginxを使う
+
+    # syntax=docker/dockerfile:1
+    FROM node:18 AS build
+    WORKDIR /app
+    COPY package* yarn.lock ./
+    RUN yarn install
+    COPY public ./public
+    COPY src ./src
+    RUN yarn run build
+
+    FROM nginx:alpine
+    COPY --from=build /app/build /usr/share/nginx/html
+
+まとめ
+    ・共通しているのはコンパイルした出力を、サーバのコンテナにコピーしているということ
+    ・マルチステージビルドで、イメージ全体の容量を減らせる
+```
 
 # 便利コマンド
 ```
