@@ -427,3 +427,28 @@ jobs:
         5. docker run -dp 8080:80 --rm <YOUR_IMAGE_NAME:TAG>
         6. localhost:8080で確認
 ```
+
+### 接続できない場合(Ubuntu)
+```
+Cloud not resolve host: github.com
+
+
+-> resolv.confを再生成しないようにする
+$ sudo vim /etc/wsl.conf
+[network]
+generateResolvConf = false
+
+-> DNS_serverを変更する
+$ sudo vim /etc/resolv.conf
+nameserver 8.8.8.8
+
+-> 再起動のたびに、/etc/resolv.confが削除されないように属性を変更
+$ sudo chattr +i /etc/resolv.conf
+
+-> この設定を解除するとき(編集もできないので)は次のようにする
+$ chattr -R -i /etc/resolv.conf
+
+-> 現在の属性を確認したいとき
+$ lsattr /etc/resolv.conf
+
+```
