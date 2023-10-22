@@ -441,6 +441,7 @@ generateResolvConf = false
 -> DNS_serverを変更する
 $ sudo vim /etc/resolv.conf
 nameserver 8.8.8.8
+nameserver 8.8.4.4
 
 -> 再起動のたびに、/etc/resolv.confが削除されないように属性を変更
 $ sudo chattr +i /etc/resolv.conf
